@@ -15,3 +15,10 @@ services:
     ports:
       - 3308:3306
     tty: true
+    networks:
+      - imgsvc-net
+
+networks:
+  imgsvc-net:
+    name: imgsvc-net
+    driver: bridge

@@ -4,7 +4,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path/filepath"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo"
 
 	"img-svc/aws"
@@ -28,7 +30,10 @@ func SaveImg(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Could not process file\n")
 	}
 
-	img.Url, err = aws.UploadtoS3(img.Name, imgfileByte)
+	img.Uuid = uuid.New().String()
+	uploadName := img.Uuid + filepath.Ext(img.Name)
+
+	err = aws.UploadtoS3(uploadName, imgfileByte)
 
 	if err != nil {
 		log.Println(err)

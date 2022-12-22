@@ -1,20 +1,19 @@
-FROM golang:1.19.3-alpine3.16
-
-
-RUN mkdir /app
-
-ADD server.go /app
-
-WORKDIR /app
-
-/bin/sh -c go install github.com/aws/aws-sdk-go/aws'
-
-RUN go build -o main .
+FROM golang:1.19 as builder
 
 
 
-EXPOSE 8089
+WORKDIR /src
+COPY ./ ./
 
+# RUN go mod tidy
+# RUN go mod download
 
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix 'static' -o /app .
 
-CMD ["go", "run", "server.go"]
+#  final image
+FROM alpine:latest
+
+COPY --from=builder /app /app
+EXPOSE 8080
+
+ENTRYPOINT ["/app"]

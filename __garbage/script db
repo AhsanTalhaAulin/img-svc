@@ -1,0 +1,12 @@
+CREATE TABLE images(
+  ID INT NOT NULL AUTO_INCREMENT,  
+  name VARCHAR(64), 
+  url VARCHAR(512),
+  PRIMARY KEY(ID)
+);
+
+
+CREATE TABLE images(
+  name VARCHAR(64), 
+  url VARCHAR(512)
+);

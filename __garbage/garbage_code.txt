@@ -1,0 +1,79 @@
+func createFile(file *multipart.FileHeader) error {
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	// Destination
+	dst, err := os.Create(file.Filename)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
+
+func uploadtoS3(name string, imgFile []byte) (string, error) {
+	// The session the S3 Uploader will use
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String("ap-southeast-1")},
+	)
+	if err != nil {
+		fmt.Printf("could not create session, %v", err)
+		return "", nil
+	}
+
+	// Create an uploader with the session and default options
+	uploader := s3manager.NewUploader(sess)
+
+	// file, err := os.Open(imgFile.Filename)
+	// if err != nil {
+	// 	fmt.Printf("failed to open file %q, %v", imgFile.Filename, err)
+	// 	return "", err
+	// }
+
+	// Upload the file to S3.
+	result, err := uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String("talha-test-image-s3"),
+		Key:    aws.String(name),
+		Body:   bytes.NewReader(imgFile),
+	})
+	if err != nil {
+		fmt.Printf("failed to upload file, %v", err)
+		return "", nil
+	}
+	fmt.Printf("file uploaded to, %v\n", result.Location)
+
+	return result.Location, nil
+}
+
+
+
+https://talha-test-image-s3.s3.ap-southeast-1.amazonaws.com/consul5.png%0A?
+response-content-disposition=inline&
+X-Amz-Security-Token=IQoJb3JpZ2luX2VjEB0aCmFwLXNvdXRoLTEiRjBEAiA18Kd9GIFriUyugBpLw7sxwpspf8PKTyEm0EDDxqzUxwIgQoT9vFou6eizp%2FANUAsK0%2FRuQV0a2Og%2BPvOpctGCppoqhQMIJhADGgwyODYwNjI4MjEyNTYiDGB4S7F9rkNABoETeSriAo6P47uCSZvkBe5mR5h6wbeq0T68Cy8S7HX4YbPOl%2BtfEkiIaiCXbuVwsduJs7qC%2Bz4b99J%2F0a3QAZABJcIANYaZ%2B7DVlyWwv7xfskGwsMgCN7er2%2FkwQyUKwc9SSZTqcELK632QQlWJOBbk9PHN9mYH1Kp%2BaW56No8zOXtC2QGfrqJVswsoRlR2XW%2B3IpN1qbnk%2BfrdcUIcpr5HZkUXI4Jhml6VKgHY%2FjymFOsOlkAKPp%2FBjQadrd5v%2FEVqskiGg72GEG5jhOoS4xYxUg0gh2K56Hf0slaAAblwK9WLb%2F%2BVCqUCq%2FWUUOWN%2BngKVfAkpxZIVL2X5mulgdDyOWubWdo6hUGtg4L%2B%2BMoXsW9X%2FHaZ4k%2B5TzbWDCP63T9EexhR0PLl57qNwVFqfkUCjogzbiS2tT6yM86c0AIPwXRENZ%2F604HdXGqXsMMacN9H2S5SsPdAzt6jYqJ0rYh%2FXGPHdTcijTCK%2FNabBjq0AtJJVXmFckN6G9Us8TzfSpWIx6VvAcYw8imgCfOxt4Qi1j8zNBBizLBkK1I0YvZX6LM7Xe4LXM%2BtRalXLxxiS1uJe5OI3d4RxQfPv9MLX3mtlnEjMNjLi4qbfeKPq145Ma%2FJasqlTttGYqE9eoV92v6W3XsRgqMDaEjWySeIuiOHFAAgWgl2a3DJFeBuYBiU7w6Su4H96uH3YRPrrtP4%2BtPeCUN0%2B9mzc%2FN%2FUu5KR5tv9dainXS8qTmr9Ir5D8cjJn96tJJfvCSGXidl9tln5m%2FQpi3AvQ%2BQiVNnBu38inoZc6%2BogKweHSWj%2F02J6uxeZcS4E9D7iRFiDcEsUUhYLcz9CJ%2F40PvRrDuSLWt5Po2xJagMLqbxqdlpqsyhCb31dkQdHgTutRi5S13WRPpGO1vZmRh2&
+X-Amz-Algorithm=AWS4-HMAC-SHA256&
+X-Amz-Date=20221117T133954Z&
+X-Amz-SignedHeaders=host&
+X-Amz-Expires=120&
+X-Amz-Credential=ASIAUFGVMH6EF6PFONV3%2F20221117%2Fap-southeast-1%2Fs3%2Faws4_request&
+X-Amz-Signature=ce6ac0a936214ee2aa2670fbfe68bbebf5ea7138a2eeeb795d0b66aca3ffb979
+
+
+
+https://talha-test-image-s3.s3.ap-southeast-1.amazonaws.com/consul5.png?
+X-Amz-Algorithm=AWS4-HMAC-SHA256&
+X-Amz-Credential=AKIAUFGVMH6EDIPX6Q6N%2F20221117%2Fap-southeast-1%2Fs3%2Faws4_request&
+X-Amz-Date=20221117T132421Z&
+X-Amz-Expires=900&
+X-Amz-SignedHeaders=host&
+X-Amz-Signature=df289ef219597e6ddb84f15700a0f92ed8f7be0fe909ca75a8d167c1bf0143bf

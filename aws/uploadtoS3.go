@@ -11,13 +11,13 @@ import (
 	"img-svc/domain"
 )
 
-func UploadtoS3(name string, imgFile []byte) (string, error) {
+func UploadtoS3(name string, imgFile []byte) error {
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String("ap-southeast-1")},
 	)
 	if err != nil {
 		log.Printf("Could not create session, %v\n", err)
-		return "", nil
+		return err
 	}
 
 	uploader := s3manager.NewUploader(sess)
@@ -29,9 +29,9 @@ func UploadtoS3(name string, imgFile []byte) (string, error) {
 	})
 	if err != nil {
 		log.Printf("Failed to upload file, %v\n", err)
-		return "", nil
+		return err
 	}
 	log.Printf("File uploaded to, %v\n", result.Location)
 
-	return result.Location, nil
+	return nil
 }

@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/aws/aws-sdk-go v1.44.139
+	github.com/google/uuid v1.3.0
 	github.com/labstack/echo v3.3.10+incompatible
 	gorm.io/driver/mysql v1.4.4
 	gorm.io/gorm v1.24.1

@@ -5,22 +5,15 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
+	"img-svc/conn"
 	"img-svc/domain"
 )
 
 func UploadtoS3(name string, imgFile []byte) error {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("ap-southeast-1")},
-	)
-	if err != nil {
-		log.Printf("Could not create session, %v\n", err)
-		return err
-	}
 
-	uploader := s3manager.NewUploader(sess)
+	uploader := s3manager.NewUploader(conn.AwsClient.Sess)
 
 	result, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(domain.BucketName),

@@ -11,6 +11,7 @@ import (
 func main() {
 	// create a new echo instance
 	conn.ConnectDB()
+	conn.ConnectAWS()
 	e := echo.New()
 
 	e.POST("/img", svc.SaveImg)

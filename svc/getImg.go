@@ -13,26 +13,27 @@ import (
 )
 
 func GetImg(c echo.Context) error {
+	log.Println("Post Request Received")
 
 	name := c.QueryParam("name")
 
 	fileExt := filepath.Ext(name)
 	fileName := strings.TrimSuffix(name, fileExt)
-	log.Println("name: ", fileName, "ext name: ", fileExt)
+	// log.Println("name: ", fileName, "ext name: ", fileExt)
 	uuid, err := db.GetUUID(fileName)
-	log.Println("uuid: ", uuid)
+	// log.Println("uuid: ", uuid)
 	if err != nil {
 		log.Println(err)
 		return c.String(http.StatusBadRequest, "could not get uuid")
 	}
 
-	log.Println(" uuid+ fileExt: ", uuid+fileExt)
+	log.Println("UUID + fileExt: ", uuid+fileExt)
 	urlStr, err := aws.GetPresignedUrl(uuid + fileExt)
 
 	if err != nil {
 		log.Println(err)
 		return c.String(http.StatusBadRequest, urlStr)
 	}
-
+	log.Println("Post Request Served")
 	return c.String(http.StatusOK, urlStr)
 }

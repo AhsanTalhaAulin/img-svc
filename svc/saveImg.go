@@ -17,7 +17,7 @@ import (
 func SaveImg(c echo.Context) error {
 
 	// ---------------------------------------------------------------- getting data
-	log.Println("Request received")
+	log.Println("Post Request Received")
 	var img domain.Image
 
 	img.Name = c.FormValue("name")
@@ -46,6 +46,6 @@ func SaveImg(c echo.Context) error {
 		log.Println(err)
 		return c.String(http.StatusBadRequest, "Could not save data\n")
 	}
-
+	log.Println("Post Request Served")
 	return c.String(http.StatusOK, "Request Successful")
 }

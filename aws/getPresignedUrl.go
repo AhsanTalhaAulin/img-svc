@@ -5,24 +5,15 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
+	"img-svc/conn"
 	"img-svc/domain"
 )
 
 func GetPresignedUrl(name string) (string, error) {
 
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("ap-southeast-1")},
-	)
-
-	if err != nil {
-		log.Printf("Could not create session, %v\n", err)
-		return "Could not create session", nil
-	}
-
-	svc := s3.New(sess)
+	svc := s3.New(conn.AwsClient.Sess)
 
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(domain.BucketName),
@@ -35,7 +26,7 @@ func GetPresignedUrl(name string) (string, error) {
 		return "Failed to sign request", err
 	}
 
-	log.Println("The URL is---------->", urlStr)
+	// log.Println("The URL is---------->", urlStr)
 
 	return urlStr, nil
 }

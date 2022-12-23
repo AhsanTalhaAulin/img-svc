@@ -19,7 +19,7 @@ var Client gormMysql
 func ConnectDB() error {
 	// refer https://github.com/go-sql-driver/mysql#dsn-data-source-name for details
 
-	dsn := domain.DbUserName + ":" + domain.DbPass + "@tcp(img-db:" + domain.DbPort + ")/" + domain.DbName + "?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := domain.DbUserName + ":" + domain.DbPass + "@tcp(" + domain.DbHost + ":" + domain.DbPort + ")/" + domain.DbName + "?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err.Error())

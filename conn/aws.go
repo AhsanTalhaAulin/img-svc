@@ -24,7 +24,8 @@ func ConnectAWS() error {
 		},
 	)
 	if err != nil {
-		log.Printf("Could not create session, %v\n", err)
+		log.Fatal(err)
+		// log.Printf("Could not create session, %v\n", err)
 		return err
 	}
 

@@ -4,9 +4,7 @@ services:
 
   db:
     container_name: img-db
-    build:
-      context: .
-      dockerfile: Dockerfile.db
+    image: imgsvc_db
     environment:
       - MYSQL_USER=img_user
       - MYSQL_PASSWORD=12345678
@@ -17,7 +15,13 @@ services:
     tty: true
     networks:
       - imgsvc-net
-    restart: always
+    # restart: always
+    healthcheck:
+      test: "mysqladmin ping -p$$MYSQL_ROOT_PASSWORD || exit 1"
+      retries: 2
+      timeout: 10s
+      interval: 5s
+      start_period: 10s
 
 
   img-svc:
@@ -25,17 +29,17 @@ services:
     build: 
       context: .
     environment:
-      - AWS_ACCESS_KEY_ID_TES=<aws access key>
-      - AWS_SECRET_ACCESS_KEY_TEST=<aws secret access key>
+      - AWS_ACCESS_KEY_ID_TES=<AccessKeyId>
+      - AWS_SECRET_ACCESS_KEY_TEST=<SecretAccessKey>
       - AWS_DEFAULT_REGION_TEST=ap-southeast-1
 
     depends_on:
-      - db
+      db: 
+        condition: service_healthy
     ports:
       - 8080:8080
     networks:
       - imgsvc-net
-    # restart: always
 
 
 
@@ -43,5 +47,4 @@ networks:
   imgsvc-net:
     name: imgsvc-net
     driver: bridge
-
 

@@ -13,7 +13,7 @@ import (
 )
 
 func GetImg(c echo.Context) error {
-	log.Println("Post Request Received")
+	log.Println("GET Request Received")
 
 	name := c.QueryParam("name")
 
@@ -22,7 +22,7 @@ func GetImg(c echo.Context) error {
 	// log.Println("name: ", fileName, "ext name: ", fileExt)
 	uuid, err := db.GetUUID(fileName)
 	// log.Println("uuid: ", uuid)
-	if err != nil {
+	if err != nil || uuid == "" {
 		log.Println(err)
 		return c.String(http.StatusBadRequest, "could not get uuid")
 	}
@@ -34,6 +34,6 @@ func GetImg(c echo.Context) error {
 		log.Println(err)
 		return c.String(http.StatusBadRequest, urlStr)
 	}
-	log.Println("Post Request Served")
+	log.Println("GET Request Served")
 	return c.String(http.StatusOK, urlStr)
 }

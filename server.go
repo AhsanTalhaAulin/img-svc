@@ -23,6 +23,7 @@ func main() {
 
 	e.POST("/img", svc.SaveImg)
 	e.GET("/img", svc.GetImg)
+	e.GET("/searchImg", svc.SearchImg)
 
 	e.Logger.Fatal(e.Start(":8080"))
 

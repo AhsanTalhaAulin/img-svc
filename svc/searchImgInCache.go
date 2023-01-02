@@ -8,7 +8,6 @@ import (
 	"img-svc/domain"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/go-redis/redis/v9"
 	"github.com/labstack/echo"
@@ -17,40 +16,54 @@ import (
 func SearchImgInCache(c echo.Context) error {
 	log.Println("Search Request Received")
 
-	lat, err := strconv.ParseFloat(c.FormValue("lat"), 64)
-	if err != nil {
-		log.Println("Invalid latitude")
-		return c.String(http.StatusBadRequest, "Invalid latitude")
+	searchRequest := new(domain.SearchRequest)
+
+	if err := c.Bind(searchRequest); err != nil {
+		return c.String(http.StatusBadRequest, "could not bind request")
 	}
 
-	lon, err := strconv.ParseFloat(c.FormValue("lon"), 64)
+	err := searchRequest.Validate()
+
 	if err != nil {
-		log.Println("Invalid longitude")
-		return c.String(http.StatusBadRequest, "Invalid longitude")
+		log.Println(searchRequest)
+		log.Println(err)
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 
-	radius, err := strconv.ParseFloat(c.FormValue("radius"), 64)
-	if err != nil {
-		log.Println("Invalid radius")
-		return c.String(http.StatusBadRequest, "Invalid radius")
-	}
+	// lat, err := strconv.ParseFloat(c.FormValue("lat"), 64)
+	// if err != nil {
+	// 	log.Println("Invalid latitude")
+	// 	return c.String(http.StatusBadRequest, "Invalid latitude")
+	// }
 
-	unit := c.FormValue("radius_unit")
-	if !(unit == "km" || unit == "m") {
-		log.Println("Invalid radius unit")
-		return c.String(http.StatusBadRequest, "Invalid radius unit")
-	}
+	// lon, err := strconv.ParseFloat(c.FormValue("lon"), 64)
+	// if err != nil {
+	// 	log.Println("Invalid longitude")
+	// 	return c.String(http.StatusBadRequest, "Invalid longitude")
+	// }
+
+	// radius, err := strconv.ParseFloat(c.FormValue("radius"), 64)
+	// if err != nil {
+	// 	log.Println("Invalid radius")
+	// 	return c.String(http.StatusBadRequest, "Invalid radius")
+	// }
+
+	// unit := c.FormValue("radius_unit")
+	// if !(unit == "km" || unit == "m") {
+	// 	log.Println("Invalid radius unit")
+	// 	return c.String(http.StatusBadRequest, "Invalid radius unit")
+	// }
 
 	radiusQuery := redis.GeoRadiusQuery{
-		Radius:    radius,
-		Unit:      unit,
+		Radius:    searchRequest.Radius,
+		Unit:      searchRequest.Unit,
 		WithDist:  true,
 		WithCoord: true,
 	}
 
 	var ctx = context.Background()
 
-	images, _ := conn.RedisClient.Rdb.GeoRadius(ctx, "imageLocations", lon, lat, &radiusQuery).Result()
+	images, _ := conn.RedisClient.Rdb.GeoRadius(ctx, "imageLocations", searchRequest.Lon, searchRequest.Lon, &radiusQuery).Result()
 	var urlList []string
 	for i := range images {
 
@@ -67,9 +80,9 @@ func SearchImgInCache(c echo.Context) error {
 	}
 	var response domain.SearchResponse
 
-	response.Lat = lat
-	response.Lon = lon
-	response.Radius = radius
+	response.Lat = searchRequest.Lat
+	response.Lon = searchRequest.Lon
+	response.Radius = searchRequest.Radius
 	response.UrlList = urlList
 
 	result, _ := json.Marshal(response)

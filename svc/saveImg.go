@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo"
 
 	"img-svc/aws"
+	"img-svc/cache"
 	"img-svc/db"
 	"img-svc/domain"
 )
@@ -65,6 +66,8 @@ func SaveImg(c echo.Context) error {
 		log.Println(err)
 		return c.String(http.StatusBadRequest, "Could not upload image\n")
 	}
+
+	cache.SaveInCache(img)
 
 	log.Println("Post Request Served")
 	return c.String(http.StatusOK, "Request Successful")

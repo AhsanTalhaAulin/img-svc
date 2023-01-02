@@ -8,7 +8,10 @@ type Image struct {
 	Lon  float64
 }
 
-// type Location struct {
-// 	Lat float32
-// 	Lon float32
-// }
+type SearchResponse struct {
+	Lat    float64
+	Lon    float64
+	Radius float64
+
+	UrlList []string
+}

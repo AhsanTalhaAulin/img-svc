@@ -17,6 +17,7 @@ func SearchImg(c echo.Context) error {
 	log.Println("Search Request Received")
 
 	lat, err := strconv.ParseFloat(c.FormValue("lat"), 32)
+
 	if err != nil {
 		log.Println("Invalid latitude")
 		return c.String(http.StatusBadRequest, "Invalid latitude")

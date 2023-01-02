@@ -28,12 +28,12 @@ func GetImg(c echo.Context) error {
 	}
 
 	log.Println("UUID + fileExt: ", uuid+fileExt)
-	urlStr, err := aws.GetPresignedUrl(uuid + fileExt)
+	url, err := aws.GetPresignedUrl(uuid + fileExt)
 
 	if err != nil {
 		log.Println(err)
-		return c.String(http.StatusBadRequest, urlStr)
+		return c.String(http.StatusBadRequest, url)
 	}
 	log.Println("GET Request Served")
-	return c.String(http.StatusOK, urlStr)
+	return c.String(http.StatusOK, url)
 }

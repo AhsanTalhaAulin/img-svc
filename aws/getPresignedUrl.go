@@ -13,13 +13,14 @@ import (
 
 func GetPresignedUrl(name string) (string, error) {
 
+	// log.Println("Requesting Presigned Url for : ", name)
 	svc := s3.New(conn.AwsClient.Sess)
 
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(domain.BucketName),
 		Key:    aws.String(name),
 	})
-	urlStr, err := req.Presign(1 * time.Minute)
+	urlStr, err := req.Presign(5 * time.Minute)
 
 	if err != nil {
 		log.Println("Failed to sign request", err)

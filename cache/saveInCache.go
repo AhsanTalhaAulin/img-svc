@@ -12,57 +12,19 @@ import (
 	"github.com/go-redis/redis/v9"
 )
 
-var img domain.Image
-
-func SaveInCache(image domain.Image) {
-	img = image
-	saveLocation()
-	// saveTimestamp()
-
-}
-
-// func saveTimestamp() {
-// 	var ctx = context.Background()
-
-// 	// log.Println(img.Created_at)
-
-// 	var timestamp redis.Z
-
-// 	imgtime, err := time.Parse(time.RFC3339, img.Created_at)
-
-// 	if err != nil {
-// 		log.Println(err.Error())
-// 	}
-
-// 	timestamp.Score = float64(imgtime.Unix())
-// 	timestamp.Member = getName()
-
-// 	log.Println(conn.RedisClient.Rdb.ZAdd(ctx, "imageTimestamps", timestamp).String())
-
-// }
-
-func saveLocation() {
+func SaveInCache(img domain.Image, timeLayout string) {
 	var geoLocation redis.GeoLocation
 	var ctx = context.Background()
 
-	geoLocation.Name = getName()
+	imgtime, err := time.Parse(timeLayout, img.Created_at)
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	geoLocation.Name = strconv.FormatInt(imgtime.Unix(), 10) + "::" + img.Uuid + filepath.Ext(img.Name)
 	geoLocation.Latitude = img.Lat
 	geoLocation.Longitude = img.Lon
 
 	log.Println(conn.RedisClient.Rdb.GeoAdd(ctx, "imageLocations", &geoLocation).String())
-}
 
-func getName() string {
-
-	imgtime, err := time.Parse(time.RFC3339, img.Created_at)
-	if err != nil {
-		imgtime, err = time.Parse(domain.TimeLayout, img.Created_at)
-
-		if err != nil {
-
-			log.Println(err.Error(), "while saving in redis")
-		}
-	}
-
-	return strconv.FormatInt(imgtime.Unix(), 10) + "::" + img.Uuid + filepath.Ext(img.Name)
 }

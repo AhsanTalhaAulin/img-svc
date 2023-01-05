@@ -69,7 +69,7 @@ func SaveImg(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Could not upload image\n")
 	}
 
-	cache.SaveInCache(img)
+	cache.SaveInCache(img, domain.TimeLayout)
 
 	log.Println("Post Request Served")
 	return c.String(http.StatusOK, "Request Successful")

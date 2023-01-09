@@ -8,73 +8,98 @@ import (
 	"img-svc/domain"
 	"log"
 	"net/http"
-	"strconv"
+	"time"
 
 	"github.com/go-redis/redis/v9"
 	"github.com/labstack/echo"
 )
 
 func SearchImgInCache(c echo.Context) error {
-	log.Println("Search Request Received")
+	start := time.Now()
+	log.Printf("Search Request Received at %v", start)
 
-	lat, err := strconv.ParseFloat(c.FormValue("lat"), 64)
+	var searchRequest domain.SearchRequest
+
+	if err := c.Bind(&searchRequest); err != nil {
+		return c.String(http.StatusBadRequest, "could not bind request")
+	}
+
+	err := searchRequest.Validate()
+
 	if err != nil {
-		log.Println("Invalid latitude")
-		return c.String(http.StatusBadRequest, "Invalid latitude")
+		log.Println(err)
+		return c.String(http.StatusBadRequest, err.Error())
 	}
+	log.Println(searchRequest)
 
-	lon, err := strconv.ParseFloat(c.FormValue("lon"), 64)
-	if err != nil {
-		log.Println("Invalid longitude")
-		return c.String(http.StatusBadRequest, "Invalid longitude")
-	}
+	images := runLuaScript(searchRequest)
 
-	radius, err := strconv.ParseFloat(c.FormValue("radius"), 64)
-	if err != nil {
-		log.Println("Invalid radius")
-		return c.String(http.StatusBadRequest, "Invalid radius")
-	}
-
-	unit := c.FormValue("radius_unit")
-	if !(unit == "km" || unit == "m") {
-		log.Println("Invalid radius unit")
-		return c.String(http.StatusBadRequest, "Invalid radius unit")
-	}
-
-	radiusQuery := redis.GeoRadiusQuery{
-		Radius:    radius,
-		Unit:      unit,
-		WithDist:  true,
-		WithCoord: true,
-	}
-
-	var ctx = context.Background()
-
-	images, _ := conn.RedisClient.Rdb.GeoRadius(ctx, "imageLocations", lon, lat, &radiusQuery).Result()
 	var urlList []string
-	for i := range images {
-
-		log.Println("No:", i+1, images[i].Name, " Dist:", images[i].Dist, " Lat:", images[i].Latitude, " Lon:", images[i].Longitude)
-
-		url, err := aws.GetPresignedUrl(images[i].Name)
-
+	for _, name := range images {
+		url, err := aws.GetPresignedUrl(name)
 		if err != nil {
 			log.Println(err)
-			url = " "
+			url = err.Error()
 		}
 		urlList = append(urlList, url)
-
 	}
+
 	var response domain.SearchResponse
 
-	response.Lat = lat
-	response.Lon = lon
-	response.Radius = radius
+	response.Lat = searchRequest.Lat
+	response.Lon = searchRequest.Lon
+	response.Radius = searchRequest.Radius
+	response.Unit = searchRequest.Unit
+	response.Timestamp = searchRequest.Timestamp
 	response.UrlList = urlList
 
 	result, _ := json.Marshal(response)
 
-	log.Println("Search Request Served From Cache")
+	log.Printf("Search Request Served From Cache. Time taken: %v", time.Since(start))
 	return c.String(http.StatusOK, string(result))
 
+}
+
+func runLuaScript(searchRequest domain.SearchRequest) []string {
+
+	log.Println("Running Lua script ")
+
+	script := redis.NewScript(`
+	local radius = ARGV[1]
+	local unit = ARGV[2]
+	local lon = ARGV[3]
+	local lat = ARGV[4]
+	local timeStamp = ARGV[5]
+
+	local imgByLocation = redis.call('GEOSEARCH', 'imageLocations', 'FROMLONLAT', lon, lat, 'BYRADIUS', radius, unit)
+	
+	local result = {}
+
+	for index, value in pairs(imgByLocation) do
+		local time, name = string.match(value, "(.+)::(.+)")
+		time = tonumber(time)
+	
+		if(time >= timeStamp-300 and time <=timeStamp+300) then
+			table.insert(result, name)
+		end
+		
+	end
+	 
+	return result
+	
+	`)
+
+	var ctx = context.Background()
+	time, _ := time.Parse(domain.TimeLayout, searchRequest.Timestamp)
+
+	res, err := script.Run(ctx, conn.RedisClient.Rdb, []string{}, searchRequest.Radius, searchRequest.Unit, searchRequest.Lon, searchRequest.Lat, time.Unix()).StringSlice()
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println(res)
+
+	log.Println("Lua function ends ")
+
+	return res
 }

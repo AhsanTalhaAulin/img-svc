@@ -5,10 +5,9 @@ go 1.19
 require (
 	github.com/aws/aws-sdk-go v1.44.139
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
-	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
-	github.com/google/uuid v1.3.0
 	github.com/labstack/echo v3.3.10+incompatible
+	github.com/onokonem/sillyQueueServer v0.0.0-20170829113733-84501ce98da1
 	gorm.io/driver/mysql v1.4.4
 	gorm.io/gorm v1.24.1
 )

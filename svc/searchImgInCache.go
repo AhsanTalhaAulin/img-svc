@@ -8,10 +8,13 @@ import (
 	"img-svc/domain"
 	"log"
 	"net/http"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v9"
 	"github.com/labstack/echo"
+	"github.com/onokonem/sillyQueueServer/timeuuid"
 )
 
 func SearchImgInCache(c echo.Context) error {
@@ -32,16 +35,16 @@ func SearchImgInCache(c echo.Context) error {
 	}
 	log.Println(searchRequest)
 
-	images := runLuaScript(searchRequest)
+	images, err := getImagesByLocation(searchRequest)
+	if err != nil {
+		log.Println(err)
+		return c.String(http.StatusBadRequest, err.Error())
+	}
 
-	var urlList []string
-	for _, name := range images {
-		url, err := aws.GetPresignedUrl(name)
-		if err != nil {
-			log.Println(err)
-			url = err.Error()
-		}
-		urlList = append(urlList, url)
+	urlList, err := getUrlList(images, searchRequest)
+	if err != nil {
+		log.Println(err)
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 
 	var response domain.SearchResponse
@@ -60,46 +63,100 @@ func SearchImgInCache(c echo.Context) error {
 
 }
 
-func runLuaScript(searchRequest domain.SearchRequest) []string {
+func getUrlList(images []string, searchRequest domain.SearchRequest) ([]string, error) {
 
-	log.Println("Running Lua script ")
-
-	script := redis.NewScript(`
-	local radius = ARGV[1]
-	local unit = ARGV[2]
-	local lon = ARGV[3]
-	local lat = ARGV[4]
-	local timeStamp = ARGV[5]
-
-	local imgByLocation = redis.call('GEOSEARCH', 'imageLocations', 'FROMLONLAT', lon, lat, 'BYRADIUS', radius, unit)
-	
-	local result = {}
-
-	for index, value in pairs(imgByLocation) do
-		local time, name = string.match(value, "(.+)::(.+)")
-		time = tonumber(time)
-	
-		if(time >= timeStamp-300 and time <=timeStamp+300) then
-			table.insert(result, name)
-		end
-		
-	end
-	 
-	return result
-	
-	`)
-
-	var ctx = context.Background()
 	time, _ := time.Parse(domain.TimeLayout, searchRequest.Timestamp)
+	startTime := time.Unix() - 300
+	endTime := time.Unix() + 300
 
-	res, err := script.Run(ctx, conn.RedisClient.Rdb, []string{}, searchRequest.Radius, searchRequest.Unit, searchRequest.Lon, searchRequest.Lat, time.Unix()).StringSlice()
-	if err != nil {
-		log.Println(err)
+	var urlList []string
+	for _, name := range images {
+
+		uuid, err := timeuuid.ParseUUID(strings.TrimSuffix(name, filepath.Ext(name)))
+
+		if err != nil {
+			log.Println(err.Error())
+			return nil, err
+		}
+
+		log.Println(uuid.String())
+		log.Println(uuid.Version())
+		timeStamp := uuid.Time()
+		log.Println(timeStamp)
+
+		if timeStamp.Unix() >= startTime && timeStamp.Unix() <= endTime {
+			url, err := aws.GetPresignedUrl(name)
+			if err != nil {
+				log.Println(err)
+				url = err.Error()
+			}
+			urlList = append(urlList, url)
+		}
+
 	}
 
-	log.Println(res)
+	return urlList, nil
 
-	log.Println("Lua function ends ")
-
-	return res
 }
+
+func getImagesByLocation(searchRequest domain.SearchRequest) ([]string, error) {
+	var ctx = context.Background()
+	searchQuery := redis.GeoSearchQuery{
+		Longitude:  searchRequest.Lon,
+		Latitude:   searchRequest.Lat,
+		Radius:     searchRequest.Radius,
+		RadiusUnit: searchRequest.Unit,
+	}
+	images, err := conn.RedisClient.Rdb.GeoSearch(ctx, "imageLocations", &searchQuery).Result()
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return images, nil
+}
+
+// func getImagesUsingLuaScript(searchRequest domain.SearchRequest) ([]string, error) {
+
+// 	log.Println("Running Lua script ")
+
+// 	script := redis.NewScript(`
+// 	local radius = ARGV[1]
+// 	local unit = ARGV[2]
+// 	local lon = ARGV[3]
+// 	local lat = ARGV[4]
+// 	local timeStamp = ARGV[5]
+
+// 	local imgByLocation = redis.call('GEOSEARCH', 'imageLocations', 'FROMLONLAT', lon, lat, 'BYRADIUS', radius, unit)
+
+// 	local result = {}
+
+// 	for index, value in pairs(imgByLocation) do
+// 		local time, name = string.match(value, "(.+)::(.+)")
+// 		time = tonumber(time)
+
+// 		if(time >= timeStamp-300 and time <=timeStamp+300) then
+// 			table.insert(result, name)
+// 		end
+
+// 	end
+
+// 	return result
+
+// 	`)
+
+// 	var ctx = context.Background()
+// 	time, _ := time.Parse(domain.TimeLayout, searchRequest.Timestamp)
+
+// 	res, err := script.Run(ctx, conn.RedisClient.Rdb, []string{}, searchRequest.Radius, searchRequest.Unit, searchRequest.Lon, searchRequest.Lat, time.Unix()).StringSlice()
+// 	if err != nil {
+// 		log.Println(err)
+// 		return nil, err
+// 	}
+
+// 	log.Println(res)
+
+// 	log.Println("Lua function ends ")
+
+// 	return res, nil
+// }

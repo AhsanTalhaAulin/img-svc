@@ -45,3 +45,12 @@ func (searchRequest SearchRequest) Validate() error {
 		validation.Field(&searchRequest.Timestamp, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9]$"))),
 	)
 }
+
+func (image Image) Validate() error {
+
+	return validation.ValidateStruct(&image,
+		validation.Field(&image.Lat, validation.Required, validation.Min(-85.05112878), validation.Max(85.05112878)),
+		validation.Field(&image.Lon, validation.Required, validation.Min(-180.0), validation.Max(180.0)),
+		validation.Field(&image.Created_at, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9]$"))),
+	)
+}

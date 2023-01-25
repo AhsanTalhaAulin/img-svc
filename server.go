@@ -25,6 +25,8 @@ func main() {
 
 	e := echo.New()
 
+	e.GET("/ping", svc.Ping)
+
 	e.POST("/img", svc.SaveImg)
 	e.GET("/img", svc.GetImg)
 	e.POST("/searchImg", svc.SearchImgInCache)

@@ -2,6 +2,7 @@ package conn
 
 import (
 	"context"
+	"img-svc/domain"
 	"log"
 
 	"github.com/go-redis/redis/v9"
@@ -16,10 +17,10 @@ var RedisClient goRedis
 func ConnectRedis() error {
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "redis:6379",
+		Addr:     domain.RedisHost + ":" + domain.RedisPort,
 		Password: "", // no password set
 		DB:       0,  // use default DB
-		PoolSize: 15,
+		PoolSize: 100,
 	})
 
 	RedisClient.Rdb = rdb

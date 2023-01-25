@@ -25,9 +25,12 @@ func main() {
 
 	e := echo.New()
 
+	e.GET("/ping", svc.Ping)
+
 	e.POST("/img", svc.SaveImg)
 	e.GET("/img", svc.GetImg)
-	e.GET("/searchImg", svc.SearchImgInCache)
+	e.POST("/searchImg", svc.SearchImgInCache)
+	e.POST("/searchImg/lua", svc.SearchImgWithLuaScript)
 	e.GET("/loadCache", svc.LoadDbInCache)
 
 	e.Logger.Fatal(e.Start(":8080"))

@@ -1,16 +1,19 @@
 package domain
 
-var DbName = "img_db"
-var DbUserName = "img_user"
+import "os"
 
-var DbPass = "12345678"
+// var DbName = "img_db"
+// var DbUserName = "img_user"
 
-var DbHost = "img-db"
+// var DbPass = "12345678"
 
-// var DbName = os.Getenv("MYSQL_DATABASE")
+// var DbHost = "db"
+var DbHost = os.Getenv("DbHost")
 
-// var DbUserName = os.Getenv("MYSQL_USER")
-// var DbPass = os.Getenv("MYSQL_PASSWORD")
+var DbName = os.Getenv("DbName")
+
+var DbUserName = os.Getenv("DbUserName")
+var DbPass = os.Getenv("DbPass")
 
 var DbPort = "3306"
 

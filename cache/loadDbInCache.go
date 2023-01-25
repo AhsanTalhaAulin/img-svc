@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func LoadDbInCache() {
+func LoadDbInCache() int {
 
 	var images []domain.Image
 
@@ -16,4 +16,5 @@ func LoadDbInCache() {
 		SaveInCache(images[index], time.RFC3339)
 	}
 
+	return len(images)
 }

@@ -1,30 +1,19 @@
 package aws
 
-import (
-	"bytes"
-	"log"
+// func UploadtoS3(name string, imgFile []byte) error {
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+// 	uploader := s3manager.NewUploader(conn.AwsClient.Sess)
 
-	"img-svc/conn"
-	"img-svc/domain"
-)
+// 	result, err := uploader.Upload(&s3manager.UploadInput{
+// 		Bucket: aws.String(domain.BucketName),
+// 		Key:    aws.String(name),
+// 		Body:   bytes.NewReader(imgFile),
+// 	})
+// 	if err != nil {
+// 		log.Printf("Failed to upload file, %v\n", err)
+// 		return err
+// 	}
+// 	log.Printf("File uploaded to, %v\n", result.Location)
 
-func UploadtoS3(name string, imgFile []byte) error {
-
-	uploader := s3manager.NewUploader(conn.AwsClient.Sess)
-
-	result, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(domain.BucketName),
-		Key:    aws.String(name),
-		Body:   bytes.NewReader(imgFile),
-	})
-	if err != nil {
-		log.Printf("Failed to upload file, %v\n", err)
-		return err
-	}
-	log.Printf("File uploaded to, %v\n", result.Location)
-
-	return nil
-}
+// 	return nil
+// }

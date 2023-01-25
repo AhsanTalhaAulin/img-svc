@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deployment
+  labels:
+    app: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: db
+        image: imgsvc_db
+        imagePullPolicy: Never
+
+        env:
+          - name: MYSQL_USER
+            value: 'img_user'
+          - name: MYSQL_PASSWORD
+            value: '12345678'
+          - name: MYSQL_DATABASE
+            value: 'img_db'
+          - name: MYSQL_ROOT_PASSWORD
+            value: '12345678'
+        ports:
+        - containerPort: 3306
+
+
+
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: bitnami/redis
+        env:
+          - name: ALLOW_EMPTY_PASSWORD
+            value: 'yes'
+        ports:
+        - containerPort: 6379
+
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: img-svc-deployment
+  labels:
+    app: img-svc
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: img-svc
+  template:
+    metadata:
+      labels:
+        app: img-svc
+    spec:
+      containers:
+      - name: img-svc
+        image: imgsvc_img-svc
+        imagePullPolicy: Never
+        env:
+          - name: AWS_ACCESS_KEY_ID_TES
+            value: 'access key'
+          - name: AWS_SECRET_ACCESS_KEY_TEST
+            value: 'secret access key'
+          - name: AWS_DEFAULT_REGION_TEST
+            value: 'ap-southeast-1'
+          - name: DbHost
+            value: 'db'
+          - name: DbName
+            value: 'img_db'
+          - name: DbUserName
+            value: 'img_user'
+          - name: DbPass
+            value: '12345678'
+          - name: DbPort
+            value: '3306'
+          - name: RedisHost
+            value: 'redis'
+          - name: RedisPort
+            value: '6379'
+        
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "800M"
+            cpu: "500m"
+          limits:
+            memory: "1000M"
+            cpu: "800m"
+
+---
